@@ -27,6 +27,11 @@ app.get('/timer/:username/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/login.html'));
 });
 
+// 处理 /timer/ 路径（不带用户名）
+app.get('/timer/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/login.html'));
+});
+
 // 静态文件服务（前端）- 排除 index.html，由路由处理
 app.use(express.static(path.join(__dirname, '../frontend'), {
   index: false  // 禁用默认的 index.html

@@ -154,12 +154,22 @@ router.put('/:timerId/set-time', async (req, res) => {
       return res.status(400).json({ error: '无效的时间格式' });
     }
     
-    await updateTimer(timerId, {
+    const updates = {
       start_time: time.toISOString(),
       total_paused_duration: 0,
-      paused_at: null,
       is_running: timer.is_running
-    });
+    };
+    
+    // 如果计时器是暂停状态，使用前端发送的 paused_at 来固定显示时间
+    // 这样前端和后端使用相同的时间，避免时间不同步导致的问题
+    if (timer.is_running === 0) {
+      // 如果前端发送了 paused_at，使用它；否则使用当前时间
+      updates.paused_at = req.body.pausedAt || new Date().toISOString();
+    } else {
+      updates.paused_at = null;
+    }
+    
+    await updateTimer(timerId, updates);
     
     const updatedTimer = await getTimerById(timerId);
     res.json({ timer: updatedTimer });

@@ -473,12 +473,20 @@ if (document.getElementById('timersList')) {
             // 转换为ISO格式
             const isoTime = startTime.toISOString();
             
+            // 如果计时器是暂停状态，需要计算 paused_at 来固定显示时间
+            // paused_at = start_time + targetMilliseconds = now
+            // 这样 calculateElapsedTime 计算时：paused_at - start_time = targetMilliseconds
+            const pausedAt = new Date(now).toISOString();
+            
             const response = await fetch(`${API_BASE_URL}/timers/${timerId}/set-time`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ startTime: isoTime })
+                body: JSON.stringify({ 
+                    startTime: isoTime,
+                    pausedAt: pausedAt  // 发送 paused_at，确保前端和后端使用相同的时间
+                })
             });
             
             const data = await response.json();
