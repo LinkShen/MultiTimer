@@ -227,9 +227,14 @@ if (document.getElementById('timersList')) {
     // 退出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
         clearCurrentUser();
-        // 使用路径前缀进行跳转
+        // 使用路径前缀进行跳转，跳转到登录页面
         const prefix = getPathPrefix();
-        window.location.href = prefix ? `${prefix}/login.html` : 'login.html';
+        // 如果有路径前缀（如 /timer），跳转到 /timer/，否则跳转到根路径
+        if (prefix) {
+            window.location.href = `${prefix}/`;
+        } else {
+            window.location.href = '/';
+        }
     });
     
     // 创建计时器（直接创建未命名计时器）
