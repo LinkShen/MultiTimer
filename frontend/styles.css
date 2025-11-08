@@ -353,6 +353,59 @@ header h1 {
     display: block;
 }
 
+/* 确认对话框样式 */
+.confirm-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.confirm-dialog {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    overflow: hidden;
+}
+
+.confirm-dialog-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.confirm-dialog-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+}
+
+.confirm-dialog-body {
+    padding: 20px;
+}
+
+.confirm-dialog-body p {
+    margin: 0;
+    color: #666;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.confirm-dialog-footer {
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
     .timers-grid {

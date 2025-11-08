@@ -35,6 +35,54 @@ function clearCurrentUser() {
     localStorage.removeItem('currentUser');
 }
 
+// 自定义确认对话框（替代 confirm，支持侧边栏）
+function showConfirmDialog(message, title = '确认操作') {
+    return new Promise((resolve) => {
+        const dialog = document.getElementById('confirmDialog');
+        const titleElement = document.getElementById('confirmDialogTitle');
+        const messageElement = document.getElementById('confirmDialogMessage');
+        const confirmBtn = document.getElementById('confirmDialogConfirm');
+        const cancelBtn = document.getElementById('confirmDialogCancel');
+        
+        // 设置标题和消息
+        titleElement.textContent = title;
+        messageElement.textContent = message;
+        
+        // 显示对话框
+        dialog.style.display = 'flex';
+        
+        // 确认按钮事件
+        const handleConfirm = () => {
+            dialog.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            dialog.removeEventListener('click', handleOverlayClick);
+            resolve(true);
+        };
+        
+        // 取消按钮事件
+        const handleCancel = () => {
+            dialog.style.display = 'none';
+            confirmBtn.removeEventListener('click', handleConfirm);
+            cancelBtn.removeEventListener('click', handleCancel);
+            dialog.removeEventListener('click', handleOverlayClick);
+            resolve(false);
+        };
+        
+        // 点击遮罩层关闭
+        const handleOverlayClick = (e) => {
+            if (e.target === dialog) {
+                handleCancel();
+            }
+        };
+        
+        // 绑定事件
+        confirmBtn.addEventListener('click', handleConfirm);
+        cancelBtn.addEventListener('click', handleCancel);
+        dialog.addEventListener('click', handleOverlayClick);
+    });
+}
+
 // 计算计时器的显示时间
 function calculateElapsedTime(timer) {
     if (!timer.start_time) {
@@ -357,7 +405,8 @@ if (document.getElementById('timersList')) {
     
     // 重置计时器
     async function resetTimer(timerId) {
-        if (!confirm('确定要重置这个计时器吗？')) {
+        const confirmed = await showConfirmDialog('确定要重置这个计时器吗？', '重置计时器');
+        if (!confirmed) {
             return;
         }
         
@@ -464,7 +513,8 @@ if (document.getElementById('timersList')) {
     
     // 删除计时器
     async function deleteTimer(timerId) {
-        if (!confirm('确定要删除这个计时器吗？')) {
+        const confirmed = await showConfirmDialog('确定要删除这个计时器吗？', '删除计时器');
+        if (!confirmed) {
             return;
         }
         
