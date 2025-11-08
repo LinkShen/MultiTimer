@@ -13,16 +13,23 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// 静态文件服务（前端）
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// API路由
+// API路由（必须在静态文件之前）
 app.use('/api/users', usersRoutes);
 app.use('/api/timers', timersRoutes);
+
+// 静态文件服务（前端）- 排除 index.html，由路由处理
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  index: false  // 禁用默认的 index.html
+}));
 
 // 根路径重定向到登录页
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/login.html'));
+});
+
+// index.html 由前端 JavaScript 处理登录检查
+app.get('/index.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // 启动服务器

@@ -1,4 +1,24 @@
-const API_BASE_URL = 'http://localhost:5990/api';
+// 根据当前访问路径自动判断 API 地址
+const API_BASE_URL = (() => {
+    // 自动检测当前路径前缀（支持任意路径，如 /timer, /multi-timer 等）
+    const pathname = window.location.pathname;
+    // 提取路径前缀（例如 /timer, /multi-timer）
+    const pathMatch = pathname.match(/^\/([^\/]+)/);
+    if (pathMatch) {
+        // 如果通过路径访问（如 /timer, /multi-timer），使用相对路径
+        const pathPrefix = pathMatch[0];
+        return `${pathPrefix}/api`;
+    }
+    // 否则使用本地开发地址
+    return 'http://localhost:5990/api';
+})();
+
+// 获取当前路径前缀（用于页面跳转）
+function getPathPrefix() {
+    const pathname = window.location.pathname;
+    const pathMatch = pathname.match(/^\/([^\/]+)/);
+    return pathMatch ? pathMatch[0] : '';
+}
 
 // 获取当前用户信息
 function getCurrentUser() {
@@ -94,7 +114,9 @@ if (document.getElementById('loginForm')) {
             
             if (response.ok) {
                 setCurrentUser(data.user);
-                window.location.href = 'index.html';
+                // 使用路径前缀进行跳转
+                const prefix = getPathPrefix();
+                window.location.href = prefix ? `${prefix}/index.html` : 'index.html';
             } else {
                 showError(data.error || '登录失败');
             }
@@ -118,7 +140,9 @@ if (document.getElementById('timersList')) {
     const currentUser = getCurrentUser();
     
     if (!currentUser) {
-        window.location.href = 'login.html';
+        // 使用路径前缀进行跳转
+        const prefix = getPathPrefix();
+        window.location.href = prefix ? `${prefix}/login.html` : 'login.html';
     }
     
     // 显示用户名
@@ -127,7 +151,9 @@ if (document.getElementById('timersList')) {
     // 退出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
         clearCurrentUser();
-        window.location.href = 'login.html';
+        // 使用路径前缀进行跳转
+        const prefix = getPathPrefix();
+        window.location.href = prefix ? `${prefix}/login.html` : 'login.html';
     });
     
     // 创建计时器

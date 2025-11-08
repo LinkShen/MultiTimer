@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>多计时器 - 登录</title>
+    <script>
+        // 自动设置 base 标签，适配当前路径
+        (function() {
+            const pathname = window.location.pathname;
+            const pathMatch = pathname.match(/^(\/[^\/]+\/)/);
+            const basePath = pathMatch ? pathMatch[1] : './';
+            const base = document.createElement('base');
+            base.href = basePath;
+            document.head.insertBefore(base, document.head.firstChild);
+        })();
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
