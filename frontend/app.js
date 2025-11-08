@@ -521,35 +521,8 @@ if (document.getElementById('timersList')) {
         }, 1000);
     }
     
-    // 页面关闭时暂停所有计时器
-    window.addEventListener('beforeunload', async () => {
-        try {
-            // 使用 sendBeacon 确保请求能够发送
-            await fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
-                method: 'PUT',
-                keepalive: true
-            });
-        } catch (error) {
-            console.error('Pause all timers error:', error);
-            // 即使失败也继续，因为页面即将关闭
-        }
-    });
-    
-    // 页面卸载时暂停所有计时器（作为 beforeunload 的补充）
-    window.addEventListener('unload', () => {
-        // 使用 navigator.sendBeacon 确保请求能够发送（即使页面已关闭）
-        // 注意：sendBeacon 只支持 POST，所以这里使用 fetch with keepalive
-        if (navigator.sendBeacon) {
-            // sendBeacon 不支持 PUT，所以使用 fetch with keepalive
-            fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
-                method: 'PUT',
-                keepalive: true,
-                body: JSON.stringify({})
-            }).catch(() => {}); // 忽略错误，因为页面正在关闭
-        }
-    });
-    
     // 页面重新可见时刷新计时器状态（解决多标签页状态不同步问题）
+    // 注意：不再自动暂停计时器，只有手动点击暂停才会暂停
     document.addEventListener('visibilitychange', async () => {
         if (!document.hidden) {
             // 页面重新可见时，重新加载计时器列表以同步状态
