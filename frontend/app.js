@@ -474,12 +474,43 @@ if (document.getElementById('timersList')) {
                 
                 if (response.ok) {
                     data.timers.forEach(timer => {
-                        if (timer.is_running === 1) {
+                        const timerId = timer.id;
+                        const isRunning = timer.is_running === 1;
+                        
+                        // 更新显示时间
+                        if (isRunning) {
                             const elapsedTime = calculateElapsedTime(timer);
                             const displayTime = formatTime(elapsedTime);
-                            const displayElement = document.getElementById(`timer-display-${timer.id}`);
+                            const displayElement = document.getElementById(`timer-display-${timerId}`);
                             if (displayElement) {
                                 displayElement.textContent = displayTime;
+                            }
+                        }
+                        
+                        // 检查并更新按钮状态（解决多窗口/多标签页状态不同步问题）
+                        const startBtn = document.querySelector(`button[onclick="startTimer(${timerId})"]`);
+                        const pauseBtn = document.querySelector(`button[onclick="pauseTimer(${timerId})"]`);
+                        
+                        if (startBtn && pauseBtn) {
+                            // 如果按钮状态与服务器状态不一致，更新按钮状态
+                            const startBtnDisabled = startBtn.disabled;
+                            const pauseBtnDisabled = pauseBtn.disabled;
+                            const shouldStartDisabled = isRunning;
+                            const shouldPauseDisabled = !isRunning;
+                            
+                            if (startBtnDisabled !== shouldStartDisabled || pauseBtnDisabled !== shouldPauseDisabled) {
+                                startBtn.disabled = shouldStartDisabled;
+                                pauseBtn.disabled = shouldPauseDisabled;
+                                
+                                // 更新计时器卡片的 running 样式
+                                const timerCard = document.querySelector(`.timer-card[data-timer-id="${timerId}"]`);
+                                if (timerCard) {
+                                    if (isRunning) {
+                                        timerCard.classList.add('running');
+                                    } else {
+                                        timerCard.classList.remove('running');
+                                    }
+                                }
                             }
                         }
                     });
@@ -515,6 +546,15 @@ if (document.getElementById('timersList')) {
                 keepalive: true,
                 body: JSON.stringify({})
             }).catch(() => {}); // 忽略错误，因为页面正在关闭
+        }
+    });
+    
+    // 页面重新可见时刷新计时器状态（解决多标签页状态不同步问题）
+    document.addEventListener('visibilitychange', async () => {
+        if (!document.hidden) {
+            // 页面重新可见时，重新加载计时器列表以同步状态
+            // 这样当其他标签页修改了计时器状态时，当前标签页也能看到最新状态
+            await loadTimers();
         }
     });
     
