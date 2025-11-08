@@ -44,9 +44,10 @@ function calculateElapsedTime(timer) {
             // 所以直接计算 paused_at - start_time - total_paused_duration 即可
             elapsed = pausedAt - startTime - pausedDuration;
         } else {
-            // 如果没有 paused_at，说明从未暂停过，但也不是运行状态
-            // 这种情况不应该存在，但为了安全返回0
-            elapsed = 0;
+            // 如果没有 paused_at 且不是运行状态，但有 start_time
+            // 说明刚刚设置了开始时间但还没有开始运行
+            // 计算从开始时间到现在的时长，这样设置时间后可以立即看到显示
+            elapsed = now - startTime - pausedDuration;
         }
     }
     
@@ -174,11 +175,15 @@ if (document.getElementById('timersList')) {
             
             if (response.ok) {
                 displayTimers(data.timers);
+                // 返回加载的计时器数据，方便调用者使用
+                return data.timers;
             } else {
                 console.error('Load timers error:', data.error);
+                return [];
             }
         } catch (error) {
             console.error('Load timers error:', error);
+            return [];
         }
     }
     
@@ -230,10 +235,13 @@ if (document.getElementById('timersList')) {
                     </button>
                 </div>
                 <div class="timer-set-time">
-                    <input type="datetime-local" id="set-time-input-${timer.id}">
+                    <input type="text" id="set-time-input-${timer.id}" placeholder="HH:MM:SS 例如 01:30:00" pattern="^\\d{1,2}:\\d{2}:\\d{2}$" style="width: 150px;">
                     <button class="btn btn-info" onclick="setTimerTime(${timer.id})">
                         设置开始时刻
                     </button>
+                    <span style="font-size: 12px; color: #666; margin-left: 10px;">
+                        （例如：01:30:00 表示从1小时30分钟0秒开始计时）
+                    </span>
                 </div>
             </div>
         `;
@@ -315,20 +323,50 @@ if (document.getElementById('timersList')) {
         }
     }
     
-    // 设置计时器开始时刻
+    // 设置计时器开始时刻（从指定的时分秒开始计时）
     async function setTimerTime(timerId) {
         const input = document.getElementById(`set-time-input-${timerId}`);
-        const startTime = input.value;
+        const timeString = input.value; // 格式: HH:MM 或 HH:MM:SS
         
-        if (!startTime) {
-            alert('请选择开始时间');
+        if (!timeString) {
+            alert('请输入开始时刻（时分秒），例如：01:30:00 表示从1小时30分钟0秒开始计时');
             return;
         }
         
         try {
-            // 将本地时间转换为ISO格式
-            const time = new Date(startTime);
-            const isoTime = time.toISOString();
+            // 解析时分秒，支持 HH:MM:SS 或 HH:MM 格式
+            const timeParts = timeString.split(':');
+            if (timeParts.length < 2 || timeParts.length > 3) {
+                alert('时间格式不正确，请使用 HH:MM:SS 或 HH:MM 格式，例如：01:30:00');
+                return;
+            }
+            
+            const hours = parseInt(timeParts[0], 10);
+            const minutes = parseInt(timeParts[1], 10);
+            const seconds = timeParts.length === 3 ? parseInt(timeParts[2], 10) : 0;
+            
+            // 验证解析是否成功
+            if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+                alert('时间格式不正确，请输入有效的数字');
+                return;
+            }
+            
+            // 验证时间范围（允许更大的小时数，因为这是计时器时间，不是时钟时间）
+            if (hours < 0 || minutes < 0 || minutes > 59 || seconds < 0 || seconds > 59) {
+                alert('时间范围不正确，小时: >= 0, 分钟: 0-59, 秒: 0-59');
+                return;
+            }
+            
+            // 将时分秒转换为毫秒数（用户想要计时器显示的初始值）
+            const targetMilliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000;
+            
+            // 计算应该设置的 start_time
+            // 如果计时器要显示 targetMilliseconds，那么 start_time = 当前时间 - targetMilliseconds
+            const now = new Date().getTime();
+            const startTime = new Date(now - targetMilliseconds);
+            
+            // 转换为ISO格式
+            const isoTime = startTime.toISOString();
             
             const response = await fetch(`${API_BASE_URL}/timers/${timerId}/set-time`, {
                 method: 'PUT',
@@ -342,7 +380,23 @@ if (document.getElementById('timersList')) {
             
             if (response.ok) {
                 input.value = '';
-                loadTimers();
+                // 重新加载计时器列表
+                await loadTimers();
+                // 由于 calculateElapsedTime 已经修复，loadTimers 会正确显示时间
+                // 但为了确保立即更新，我们再次更新显示（如果计时器正在运行）
+                const timer = data.timer;
+                if (timer && timer.is_running === 1) {
+                    // 如果计时器正在运行，启动更新循环
+                    updateAllTimers();
+                } else {
+                    // 如果计时器没有运行，立即更新一次显示
+                    const elapsedTime = calculateElapsedTime(timer);
+                    const displayTime = formatTime(elapsedTime);
+                    const displayElement = document.getElementById(`timer-display-${timerId}`);
+                    if (displayElement) {
+                        displayElement.textContent = displayTime;
+                    }
+                }
             } else {
                 alert(data.error || '设置时间失败');
             }
