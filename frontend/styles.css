@@ -80,6 +80,8 @@ header {
 
 header h1 {
     color: #667eea;
+    margin: 0;
+    flex: 1;
 }
 
 .user-info {
@@ -131,8 +133,15 @@ header h1 {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.timers-section h2 {
+.timers-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+}
+
+.timers-section-header h2 {
+    margin: 0;
     color: #333;
 }
 
@@ -243,7 +252,8 @@ header h1 {
 .timer-controls {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: space-between;
 }
 
 .btn {
@@ -320,10 +330,12 @@ header h1 {
     display: flex;
     gap: 10px;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .timer-set-time input {
+    flex: 1;
+    min-width: 0;
     padding: 8px;
     border: 2px solid #e0e0e0;
     border-radius: 5px;
@@ -412,23 +424,54 @@ header h1 {
         grid-template-columns: 1fr;
     }
     
+    /* header 保持横向布局，但调整 padding 和字体大小以适应窄屏 */
     header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
+        padding: 15px 20px;
+        flex-wrap: nowrap;
     }
     
-    #createTimerForm {
-        flex-direction: column;
+    header h1 {
+        font-size: 1.2em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     
+    #logoutBtn {
+        flex-shrink: 0;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    
+    /* 保持按钮在同一行，但调整大小以适应窄屏 */
     .timer-controls {
-        flex-direction: column;
+        gap: 5px;
     }
     
+    .timer-controls .btn {
+        padding: 8px 12px;
+        font-size: 12px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    /* 保持输入框和按钮在同一行 */
     .timer-set-time {
-        flex-direction: column;
-        align-items: stretch;
+        gap: 5px;
+        flex-wrap: nowrap;
+    }
+    
+    .timer-set-time input {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+        padding: 6px 8px;
+    }
+    
+    .timer-set-time .btn {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        font-size: 12px;
     }
 }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>多计时器 - 我的计时器</title>
+    <title>多计时器</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script>
         // 自动设置 base 标签，适配当前路径
@@ -21,28 +21,15 @@
 <body>
     <div class="container">
         <header>
-            <h1>我的计时器</h1>
-            <div class="user-info">
-                <span id="usernameDisplay"></span>
-                <button id="logoutBtn" class="btn btn-secondary">退出</button>
-            </div>
+            <h1 id="userTitle">我的计时器</h1>
+            <button id="logoutBtn" class="btn btn-secondary">退出</button>
         </header>
         
-        <div class="create-timer-section">
-            <h2>创建新计时器</h2>
-            <form id="createTimerForm">
-                <input 
-                    type="text" 
-                    id="timerName" 
-                    placeholder="请输入计时器名称" 
-                    required
-                >
-                <button type="submit" class="btn btn-primary">创建</button>
-            </form>
-        </div>
-        
         <div class="timers-section">
-            <h2>我的计时器列表</h2>
+            <div class="timers-section-header">
+                <h2>我的计时器列表</h2>
+                <button id="createTimerBtn" class="btn btn-primary">新建</button>
+            </div>
             <div id="timersList" class="timers-grid">
                 <!-- 计时器列表将动态加载到这里 -->
             </div>

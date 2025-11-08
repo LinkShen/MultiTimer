@@ -221,8 +221,8 @@ if (document.getElementById('timersList')) {
         window.location.href = prefix ? `${prefix}/login.html` : 'login.html';
     }
     
-    // 显示用户名
-    document.getElementById('usernameDisplay').textContent = `用户: ${currentUser.username}`;
+    // 显示用户名标题
+    document.getElementById('userTitle').textContent = `${currentUser.username} 的计时器`;
     
     // 退出功能
     document.getElementById('logoutBtn').addEventListener('click', () => {
@@ -232,17 +232,9 @@ if (document.getElementById('timersList')) {
         window.location.href = prefix ? `${prefix}/login.html` : 'login.html';
     });
     
-    // 创建计时器
-    const createTimerForm = document.getElementById('createTimerForm');
-    createTimerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const timerName = document.getElementById('timerName').value.trim();
-        
-        if (!timerName) {
-            alert('请输入计时器名称');
-            return;
-        }
-        
+    // 创建计时器（直接创建未命名计时器）
+    const createTimerBtn = document.getElementById('createTimerBtn');
+    createTimerBtn.addEventListener('click', async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/timers`, {
                 method: 'POST',
@@ -251,14 +243,13 @@ if (document.getElementById('timersList')) {
                 },
                 body: JSON.stringify({
                     user_id: currentUser.id,
-                    name: timerName
+                    name: '未命名计时器'  // 默认名称，用户可以自己修改
                 })
             });
             
             const data = await response.json();
             
             if (response.ok) {
-                document.getElementById('timerName').value = '';
                 loadTimers();
             } else {
                 alert(data.error || '创建计时器失败');
@@ -339,13 +330,10 @@ if (document.getElementById('timersList')) {
                     </button>
                 </div>
                 <div class="timer-set-time">
-                    <input type="text" id="set-time-input-${timer.id}" placeholder="HH:MM:SS 例如 01:30:00" pattern="^\\d{1,2}:\\d{2}:\\d{2}$" style="width: 150px;">
+                    <input type="text" id="set-time-input-${timer.id}" placeholder="HH:MM:SS" pattern="^\\d{1,2}:\\d{2}:\\d{2}$">
                     <button class="btn btn-info" onclick="setTimerTime(${timer.id})">
-                        设置开始时刻
+                        设置
                     </button>
-                    <span style="font-size: 12px; color: #666; margin-left: 10px;">
-                        （例如：01:30:00 表示从1小时30分钟0秒开始计时）
-                    </span>
                 </div>
             </div>
         `;
@@ -559,18 +547,37 @@ if (document.getElementById('timersList')) {
                 const data = await response.json();
                 
                 if (response.ok) {
+                    // 获取服务器返回的计时器 ID 列表
+                    const serverTimerIds = new Set(data.timers.map(t => t.id));
+                    
+                    // 获取当前页面显示的计时器 ID 列表
+                    const displayedTimerIds = new Set(
+                        Array.from(document.querySelectorAll('.timer-card'))
+                            .map(card => parseInt(card.getAttribute('data-timer-id')))
+                            .filter(id => !isNaN(id))
+                    );
+                    
+                    // 检查是否有新增或删除的计时器
+                    const hasNewTimers = data.timers.some(t => !displayedTimerIds.has(t.id));
+                    const hasDeletedTimers = Array.from(displayedTimerIds).some(id => !serverTimerIds.has(id));
+                    
+                    // 如果有新增或删除，重新加载整个列表
+                    if (hasNewTimers || hasDeletedTimers) {
+                        await loadTimers();
+                        return;
+                    }
+                    
+                    // 如果没有变化，只更新已存在计时器的显示时间和按钮状态
                     data.timers.forEach(timer => {
                         const timerId = timer.id;
                         const isRunning = timer.is_running === 1;
                         
-                        // 更新显示时间
-                        if (isRunning) {
-                            const elapsedTime = calculateElapsedTime(timer);
-                            const displayTime = formatTime(elapsedTime);
-                            const displayElement = document.getElementById(`timer-display-${timerId}`);
-                            if (displayElement) {
-                                displayElement.textContent = displayTime;
-                            }
+                        // 更新显示时间（包括暂停状态的计时器，确保时间显示正确）
+                        const elapsedTime = calculateElapsedTime(timer);
+                        const displayTime = formatTime(elapsedTime);
+                        const displayElement = document.getElementById(`timer-display-${timerId}`);
+                        if (displayElement) {
+                            displayElement.textContent = displayTime;
                         }
                         
                         // 检查并更新按钮状态（解决多窗口/多标签页状态不同步问题）
