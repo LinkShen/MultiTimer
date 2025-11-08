@@ -92,11 +92,9 @@ if (document.getElementById('loginForm')) {
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value.trim();
-        
-        if (!username) {
+    // 执行登录的函数
+    async function performLogin(username) {
+        if (!username || !username.trim()) {
             showError('请输入用户名');
             return;
         }
@@ -107,7 +105,7 @@ if (document.getElementById('loginForm')) {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username })
+                body: JSON.stringify({ username: username.trim() })
             });
             
             const data = await response.json();
@@ -124,6 +122,36 @@ if (document.getElementById('loginForm')) {
             console.error('Login error:', error);
             showError('登录失败，请检查服务器连接');
         }
+    }
+    
+    // 检测 URL 路径中的用户名（格式：/timer/用户名 或 /timer/用户名/）
+    function extractUsernameFromPath() {
+        const pathname = window.location.pathname;
+        // 匹配格式：/timer/用户名 或 /timer/用户名/
+        const match = pathname.match(/^\/timer\/([^\/]+)\/?$/);
+        if (match && match[1]) {
+            return match[1];
+        }
+        return null;
+    }
+    
+    // 检查是否有路径中的用户名，如果有则自动登录
+    const usernameFromPath = extractUsernameFromPath();
+    if (usernameFromPath) {
+        // 自动填充用户名到输入框
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.value = usernameFromPath;
+        }
+        // 自动执行登录
+        performLogin(usernameFromPath);
+    }
+    
+    // 表单提交事件
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        await performLogin(username);
     });
     
     function showError(message) {

@@ -17,6 +17,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/users', usersRoutes);
 app.use('/api/timers', timersRoutes);
 
+// 支持 /timer/:username 路径，自动登录
+// 这个路由必须在静态文件服务之前，否则会被静态文件服务拦截
+app.get('/timer/:username', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/login.html'));
+});
+
+app.get('/timer/:username/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/login.html'));
+});
+
 // 静态文件服务（前端）- 排除 index.html，由路由处理
 app.use(express.static(path.join(__dirname, '../frontend'), {
   index: false  // 禁用默认的 index.html
