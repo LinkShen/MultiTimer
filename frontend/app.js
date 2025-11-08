@@ -219,7 +219,9 @@ if (document.getElementById('timersList')) {
         return `
             <div class="timer-card ${isRunning ? 'running' : ''}" data-timer-id="${timer.id}">
                 <div class="timer-header">
-                    <span class="timer-name">${escapeHtml(timer.name)}</span>
+                    <span class="timer-name" id="timer-name-${timer.id}" ondblclick="editTimerName(${timer.id})" title="双击编辑名称">${escapeHtml(timer.name)}</span>
+                    <input type="text" class="timer-name-edit" id="timer-name-input-${timer.id}" value="${escapeHtml(timer.name)}" style="display: none;" onblur="saveTimerName(${timer.id})" onkeypress="handleTimerNameKeyPress(event, ${timer.id})">
+                    <button class="timer-edit" onclick="editTimerName(${timer.id})" title="编辑名称">✏️</button>
                     <button class="timer-delete" onclick="deleteTimer(${timer.id})">删除</button>
                 </div>
                 <div class="timer-display" id="timer-display-${timer.id}">${displayTime}</div>
@@ -492,11 +494,103 @@ if (document.getElementById('timersList')) {
     // 初始加载
     loadTimers();
     
+    // 编辑计时器名称
+    function editTimerName(timerId) {
+        const nameSpan = document.getElementById(`timer-name-${timerId}`);
+        const nameInput = document.getElementById(`timer-name-input-${timerId}`);
+        
+        if (nameSpan && nameInput) {
+            nameSpan.style.display = 'none';
+            nameInput.style.display = 'inline-block';
+            nameInput.focus();
+            nameInput.select();
+        }
+    }
+    
+    // 保存计时器名称
+    async function saveTimerName(timerId) {
+        const nameSpan = document.getElementById(`timer-name-${timerId}`);
+        const nameInput = document.getElementById(`timer-name-input-${timerId}`);
+        
+        if (!nameSpan || !nameInput) {
+            return;
+        }
+        
+        const newName = nameInput.value.trim();
+        
+        if (!newName) {
+            // 如果名称为空，恢复原名称
+            nameInput.value = nameSpan.textContent;
+            nameSpan.style.display = 'inline-block';
+            nameInput.style.display = 'none';
+            alert('计时器名称不能为空');
+            return;
+        }
+        
+        if (newName === nameSpan.textContent) {
+            // 名称没有变化，直接隐藏输入框
+            nameSpan.style.display = 'inline-block';
+            nameInput.style.display = 'none';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_BASE_URL}/timers/${timerId}/name`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newName })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                nameSpan.textContent = newName;
+                nameSpan.style.display = 'inline-block';
+                nameInput.style.display = 'none';
+            } else {
+                alert(data.error || '更新名称失败');
+                // 恢复原名称
+                nameInput.value = nameSpan.textContent;
+                nameSpan.style.display = 'inline-block';
+                nameInput.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Save timer name error:', error);
+            alert('更新名称失败，请检查服务器连接');
+            // 恢复原名称
+            nameInput.value = nameSpan.textContent;
+            nameSpan.style.display = 'inline-block';
+            nameInput.style.display = 'none';
+        }
+    }
+    
+    // 处理名称输入框的按键事件
+    function handleTimerNameKeyPress(event, timerId) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveTimerName(timerId);
+        } else if (event.key === 'Escape') {
+            event.preventDefault();
+            const nameSpan = document.getElementById(`timer-name-${timerId}`);
+            const nameInput = document.getElementById(`timer-name-input-${timerId}`);
+            if (nameSpan && nameInput) {
+                nameInput.value = nameSpan.textContent;
+                nameSpan.style.display = 'inline-block';
+                nameInput.style.display = 'none';
+            }
+        }
+    }
+    
     // 将函数暴露到全局作用域，以便HTML中的onclick可以访问
     window.startTimer = startTimer;
     window.pauseTimer = pauseTimer;
     window.resetTimer = resetTimer;
     window.setTimerTime = setTimerTime;
     window.deleteTimer = deleteTimer;
+    window.editTimerName = editTimerName;
+    window.saveTimerName = saveTimerName;
+    window.handleTimerNameKeyPress = handleTimerNameKeyPress;
 }
 

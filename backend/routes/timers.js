@@ -192,6 +192,30 @@ router.put('/user/:userId/pause-all', async (req, res) => {
   }
 });
 
+// 更新计时器名称
+router.put('/:timerId/name', async (req, res) => {
+  try {
+    const { timerId } = req.params;
+    const { name } = req.body;
+    
+    const timer = await getTimerById(timerId);
+    if (!timer) {
+      return res.status(404).json({ error: '计时器不存在' });
+    }
+    
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ error: '计时器名称不能为空' });
+    }
+    
+    await updateTimer(timerId, { name: name.trim() });
+    const updatedTimer = await getTimerById(timerId);
+    res.json({ timer: updatedTimer });
+  } catch (error) {
+    console.error('Update timer name error:', error);
+    res.status(500).json({ error: '更新计时器名称失败' });
+  }
+});
+
 // 删除计时器
 router.delete('/:timerId', async (req, res) => {
   try {
