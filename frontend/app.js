@@ -494,7 +494,7 @@ if (document.getElementById('timersList')) {
     window.addEventListener('beforeunload', async () => {
         try {
             // 使用 sendBeacon 确保请求能够发送
-            const response = await fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
+            await fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
                 method: 'PUT',
                 keepalive: true
             });
@@ -504,16 +504,17 @@ if (document.getElementById('timersList')) {
         }
     });
     
-    // 页面隐藏时也暂停所有计时器（移动端切换到后台）
-    document.addEventListener('visibilitychange', async () => {
-        if (document.hidden) {
-            try {
-                await fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
-                    method: 'PUT'
-                });
-            } catch (error) {
-                console.error('Pause all timers error:', error);
-            }
+    // 页面卸载时暂停所有计时器（作为 beforeunload 的补充）
+    window.addEventListener('unload', () => {
+        // 使用 navigator.sendBeacon 确保请求能够发送（即使页面已关闭）
+        // 注意：sendBeacon 只支持 POST，所以这里使用 fetch with keepalive
+        if (navigator.sendBeacon) {
+            // sendBeacon 不支持 PUT，所以使用 fetch with keepalive
+            fetch(`${API_BASE_URL}/timers/user/${currentUser.id}/pause-all`, {
+                method: 'PUT',
+                keepalive: true,
+                body: JSON.stringify({})
+            }).catch(() => {}); // 忽略错误，因为页面正在关闭
         }
     });
     
