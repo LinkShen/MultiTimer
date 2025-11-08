@@ -6,3 +6,9 @@ backend/database.db-journal
 .DS_Store
 .env
 
+# 辅助文档（避免泄露隐私信息，只保留 README.md）
+DOMAIN_SETUP.md
+NGINX_PATH_CONFIG.md
+SERVICE_MANAGEMENT.md
+GITHUB_UPLOAD.md
+
